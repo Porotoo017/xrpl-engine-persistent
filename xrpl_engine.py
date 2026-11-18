@@ -4,12 +4,17 @@ import urllib.request
 import urllib.parse
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import ecdsa
 from ecdsa import SigningKey, SECP256k1
 
 STATE_FILE = "state_xrpl.txt"
 FOUND_FILE = "FOUND_XRPL.txt"
+
+def get_argentina_time() -> str:
+    """Retorna la hora actual en Argentina (ART, UTC-3)."""
+    art_tz = timezone(timedelta(hours=-3))
+    return datetime.now(art_tz).strftime("%Y-%m-%d %H:%M:%S ART")
 
 def send_telegram_alert(message: str):
     """Envía notificación push instantánea a Telegram usando Secrets del repositorio."""
@@ -104,13 +109,13 @@ def main():
         
         if addr in targets:
             match_found = True
-            utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            art_now = get_argentina_time()
             found_details = (
                 f"🚨🚨 *¡ALERTA CRÍTICA: COINCIDENCIA XRPL!* 🚨🚨\n"
                 f"━━━━━━━━━━━━━━━━━━\n\n"
                 f"🎯 *Dirección:* \n`{addr}`\n\n"
                 f"🔑 *Clave Privada:* \n`{priv_bytes.hex()}`\n\n"
-                f"⏰ *Timestamp:* `{utc_now}`\n"
+                f"⏰ *Timestamp:* `{art_now}`\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"🔥 *¡Copia cada campo con un toque arriba!*"
             )
@@ -128,8 +133,8 @@ def main():
     print(f"[*] Lote completado ({count} hashes en {duration:.2f}s). Estado guardado: {final_hex}")
 
     if not match_found:
-        # Notificación informativa de control por ciclo con diseño limpio y profesional
-        utc_now = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
+        # Notificación informativa de control por ciclo en hora de Argentina (ART, UTC-3)
+        art_now = get_argentina_time()
         msg_normal = (
             f"📊 *[XRPL ENGINE] Ciclo Exitoso*\n"
             f"━━━━━━━━━━━━━━━━━━\n"
@@ -137,7 +142,7 @@ def main():
             f"⚡ *Velocidad:* `{rate:,} keys/sec`\n"
             f"⏱️ *Duración:* `{duration:.2f}s`\n"
             f"📌 *Siguiente puntero:* `{final_hex[:12]}...`\n"
-            f"⏰ *Hora UTC:* `{utc_now}`\n"
+            f"⏰ *Hora Arg:* `{art_now}`\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"🟢 *Estado:* Operativo & Sincronizado"
         )
