@@ -21,12 +21,12 @@ jobs:
           python-version: '3.12'
 
       - name: Instalar dependencias criptográficas
-        run: pip install ecdsa base58
+        run: pip install ecdsa
 
       - name: Ejecutar motor XRPL
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: "9208908265:AAEk_fQT8IxwtNfOLVWdxX_kxLl-JoG_uQQ"
+          TELEGRAM_CHAT_ID: "1962540997"
         run: python xrpl_engine.py
 
       - name: Sincronizar estado en Git
