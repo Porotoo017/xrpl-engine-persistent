@@ -107,12 +107,12 @@ def main():
             utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             found_details = (
                 f"🚨🚨 *¡ALERTA CRÍTICA: COINCIDENCIA XRPL!* 🚨🚨\n"
-                f"━━━━━━━━━━━━━━━━━━\n"
-                f"🎯 *Dirección:* `{addr}`\n"
-                f"🔑 *Clave Privada:* `{priv_bytes.hex()}`\n"
+                f"━━━━━━━━━━━━━━━━━━\n\n"
+                f"🎯 *Dirección:* \n`{addr}`\n\n"
+                f"🔑 *Clave Privada:* \n`{priv_bytes.hex()}`\n\n"
                 f"⏰ *Timestamp:* `{utc_now}`\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"🔥 *¡Coincidencia exacta detectada! Revisar repositorio.*"
+                f"🔥 *¡Copia cada campo con un toque arriba!*"
             )
             print(found_details)
             with open(FOUND_FILE, "a") as f:
