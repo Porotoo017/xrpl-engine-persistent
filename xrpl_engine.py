@@ -1,11 +1,41 @@
 import os
 import hashlib
-import base58
+import urllib.request
+import urllib.parse
+import json
 import ecdsa
 from ecdsa import SigningKey, SECP256k1
 
 STATE_FILE = "state_xrpl.txt"
 FOUND_FILE = "FOUND_XRPL.txt"
+
+def send_telegram_alert(message: str):
+    """Envía notificación push instantánea a Telegram usando Secrets del repositorio."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    
+    if not token or not chat_id:
+        print("[*] Telegram no configurado (Faltan Secrets TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID).")
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    
+    data = urllib.parse.urlencode(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method="POST")
+    
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                print("[*] Alerta de Telegram enviada exitosamente.")
+            else:
+                print(f"[!] Error al enviar Telegram: HTTP {response.status}")
+    except Exception as e:
+        print(f"[!] Excepción enviando Telegram: {e}")
 
 def save_state(priv_hex: str):
     with open(STATE_FILE, "w") as f:
@@ -23,13 +53,6 @@ def get_last_state() -> bytes:
     return os.urandom(32)
 
 def derive_xrpl_address(priv_bytes: bytes) -> str:
-    """
-    Derivación estándar de dirección XRPL (Ripple) a partir de clave privada secp256k1.
-    1. Public Key (compressed 33 bytes)
-    2. SHA256 -> RIPEMD160
-    3. Prefijo 0x00 (account ID)
-    4. Base58Check con Alphabet XRPL (rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz)
-    """
     alphabet = b"rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"
     
     sk = SigningKey.from_string(priv_bytes, curve=SECP256k1)
@@ -39,22 +62,16 @@ def derive_xrpl_address(priv_bytes: bytes) -> str:
     h = hashlib.sha256(pub_key).digest()
     r = hashlib.new('ripemd160', h).digest()
     
-    # XRPL account ID prefix = 0x00
     payload = b'\x00' + r
-    
-    # Checksum: primer 4 bytes del doble SHA256
     checksum = hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]
     full_payload = payload + checksum
     
-    # Conversión a base58 con alfabeto XRPL
-    # Implementación manual base58 check custom alphabet
     numeric = int.from_bytes(full_payload, 'big')
     result = bytearray()
     while numeric > 0:
         numeric, rem = divmod(numeric, 58)
         result.append(alphabet[rem])
     
-    # Añadir ceros a la izquierda
     for byte in full_payload:
         if byte == 0:
             result.append(alphabet[0])
@@ -64,13 +81,11 @@ def derive_xrpl_address(priv_bytes: bytes) -> str:
     return result[::-1].decode('utf-8')
 
 def main():
-    # Ejemplo de cuentas target o saldo conocido en XRPL
-    targets = {"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"} # Genesis Account XRPL
+    targets = {"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"} # Genesis Account XRPL (o tus objetivos)
     
     last_priv = get_last_state()
     print(f"[*] XRPL Engine - Continuando desde clave: {last_priv.hex()}")
     
-    # Lote optimizado para ejecución de 5 minutos en GitHub Actions
     count = 0
     current_priv_int = int.from_bytes(last_priv, 'big')
     
@@ -81,15 +96,19 @@ def main():
         count += 1
         
         if addr in targets:
-            msg = f"[!] ¡ÉXITO XRPL! Dirección: {addr} | PrivKey: {priv_bytes.hex()}\n"
+            msg = f"🚨 *¡COINCIDENCIA ENCONTRADA EN XRPL!* 🚨\n\n🔹 *Dirección:* `{addr}`\n🔹 *Clave Privada:* `{priv_bytes.hex()}`"
             print(msg)
             with open(FOUND_FILE, "a") as f:
-                f.write(msg)
+                f.write(msg + "\n")
+            send_telegram_alert(msg)
             break
             
     final_hex = current_priv_int.to_bytes(32, 'big').hex()
     save_state(final_hex)
     print(f"[*] Lote completado ({count} hashes). Estado guardado: {final_hex}")
+
+    # Notificación opcional de control (comentar si no deseas reporte por cada ciclo horario)
+    # send_telegram_alert(f"✅ Ciclo XRPL completado.\nHashes procesados: {count}\nÚltimo estado: `{final_hex[:12]}...`")
 
 if __name__ == "__main__":
     main()

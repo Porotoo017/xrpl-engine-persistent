@@ -24,6 +24,9 @@ jobs:
         run: pip install ecdsa base58
 
       - name: Ejecutar motor XRPL
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python xrpl_engine.py
 
       - name: Sincronizar estado en Git
