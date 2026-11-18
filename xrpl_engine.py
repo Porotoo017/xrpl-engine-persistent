@@ -3,6 +3,8 @@ import hashlib
 import urllib.request
 import urllib.parse
 import json
+import time
+from datetime import datetime, timezone
 import ecdsa
 from ecdsa import SigningKey, SECP256k1
 
@@ -86,29 +88,60 @@ def main():
     last_priv = get_last_state()
     print(f"[*] XRPL Engine - Continuando desde clave: {last_priv.hex()}")
     
+    start_time = time.time()
     count = 0
     current_priv_int = int.from_bytes(last_priv, 'big')
     
-    for _ in range(400000):
+    batch_size = 400000
+    match_found = False
+    found_details = ""
+    
+    for _ in range(batch_size):
         current_priv_int += 1
         priv_bytes = current_priv_int.to_bytes(32, 'big')
         addr = derive_xrpl_address(priv_bytes)
         count += 1
         
         if addr in targets:
-            msg = f"🚨 *¡COINCIDENCIA ENCONTRADA EN XRPL!* 🚨\n\n🔹 *Dirección:* `{addr}`\n🔹 *Clave Privada:* `{priv_bytes.hex()}`"
-            print(msg)
+            match_found = True
+            utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+            found_details = (
+                f"🚨🚨 *¡ALERTA CRÍTICA: COINCIDENCIA XRPL!* 🚨🚨\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"🎯 *Dirección:* `{addr}`\n"
+                f"🔑 *Clave Privada:* `{priv_bytes.hex()}`\n"
+                f"⏰ *Timestamp:* `{utc_now}`\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"🔥 *¡Coincidencia exacta detectada! Revisar repositorio.*"
+            )
+            print(found_details)
             with open(FOUND_FILE, "a") as f:
-                f.write(msg + "\n")
-            send_telegram_alert(msg)
+                f.write(found_details + "\n")
+            send_telegram_alert(found_details)
             break
             
+    duration = time.time() - start_time
+    rate = int(count / max(duration, 0.001))
     final_hex = current_priv_int.to_bytes(32, 'big').hex()
     save_state(final_hex)
-    print(f"[*] Lote completado ({count} hashes). Estado guardado: {final_hex}")
+    
+    print(f"[*] Lote completado ({count} hashes en {duration:.2f}s). Estado guardado: {final_hex}")
 
-    # Notificación opcional de control (comentar si no deseas reporte por cada ciclo horario)
-    # send_telegram_alert(f"✅ Ciclo XRPL completado.\nHashes procesados: {count}\nÚltimo estado: `{final_hex[:12]}...`")
+    if not match_found:
+        # Notificación informativa de control por ciclo con diseño limpio y profesional
+        utc_now = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
+        msg_normal = (
+            f"📊 *[XRPL ENGINE] Ciclo Exitoso*\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+            f"🔢 *Lote procesado:* `{count:,}` claves\n"
+            f"⚡ *Velocidad:* `{rate:,} keys/sec`\n"
+            f"⏱️ *Duración:* `{duration:.2f}s`\n"
+            f"📌 *Siguiente puntero:* `{final_hex[:12]}...`\n"
+            f"⏰ *Hora UTC:* `{utc_now}`\n"
+            f"━━━━━━━━━━━━━━━━━━\n"
+            f"🟢 *Estado:* Operativo & Sincronizado"
+        )
+        send_telegram_alert(msg_normal)
 
 if __name__ == "__main__":
     main()
