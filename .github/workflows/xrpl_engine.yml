@@ -3,7 +3,7 @@ name: XRPL Engine Persistent
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/15 * * * *'
 
 jobs:
   run-xrpl-engine:

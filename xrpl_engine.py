@@ -97,7 +97,8 @@ def main():
     count = 0
     current_priv_int = int.from_bytes(last_priv, 'big')
     
-    batch_size = 400000
+    # Configurado exactamente a 3,000,000 de direcciones por lote
+    batch_size = 3000000
     match_found = False
     found_details = ""
     
