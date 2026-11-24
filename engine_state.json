@@ -1,1 +1,6 @@
-{"cycles_run": 2, "last_found": 0}
+{
+  "cycles_run": 0,
+  "last_ledger_index": null,
+  "last_price_usd": null,
+  "last_run_utc": null
+}
