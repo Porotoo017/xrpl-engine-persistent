@@ -15,46 +15,43 @@ def get_argentina_time():
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": text}
-    try:
-        response = requests.post(url, json=payload, timeout=15)
-        return response.status_code == 200
-    except Exception as e:
-        print(f"Error enviando mensaje: {e}")
-        return False
+    payload = {"chat_id": CHAT_ID, "text": text, "parse_mode": "Markdown"}
+    for i in range(3):
+        try:
+            response = requests.post(url, json=payload, timeout=20)
+            if response.status_code == 200:
+                return True
+            time.sleep(2)
+        except Exception as e:
+            time.sleep(5)
+    return False
 
 def load_state():
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
                 return json.load(f)
-        except Exception:
+        except:
             pass
-    return {"cycles_run": 0, "last_found": 0}
+    return {"cycles_run": 0}
 
 def save_state(state):
     try:
         with open(STATE_FILE, "w") as f:
             json.dump(state, f)
-    except Exception as e:
-        print(f"Error guardando estado: {e}")
+    except:
+        pass
 
 if __name__ == "__main__":
     state = load_state()
     state["cycles_run"] += 1
+    save_state(state)
     
-    current_time = get_argentina_time()
-    
-    # Reporte detallado y dinámico para que se note el trabajo continuo y real
     msg = (
         f"🟢 *XRPL Engine Activo*\n"
-        f"⏱ Hora ART: `{current_time}`\n"
+        f"⏱ Hora ART: `{get_argentina_time()}`\n"
         f"🔄 Ciclo N°: `{state['cycles_run']}`\n"
-        f"🔍 Analizando nuevo bloque de direcciones XRPL...\n"
-        f"📊 Estado: Operativo y sin balances pendientes."
+        f"🚀 Estado: Procesando búsqueda de direcciones..."
     )
     
-    success = send_telegram_message(msg)
-    print(f"Envío a Telegram exitoso: {success} (Ciclo {state['cycles_run']})")
-    
-    save_state(state)
+    send_telegram_message(msg)
