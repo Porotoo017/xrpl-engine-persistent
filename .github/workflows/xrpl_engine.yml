@@ -12,28 +12,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Configurar Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Instalar dependencias criptográficas
-        run: pip install ecdsa
-
+      - name: Instalar dependencias
+        run: pip install requests
       - name: Ejecutar motor XRPL
-        env:
-          TELEGRAM_BOT_TOKEN: "9208908265:AAEk_fQT8IxwtNfOLVWdxX_kxLl-JoG_uQQ"
-          TELEGRAM_CHAT_ID: "1962540997"
         run: python xrpl_engine.py
-
       - name: Sincronizar estado en Git
         run: |
           git config --global user.name "XRPL-Bot-Persistente"
           git config --global user.email "xrpl-bot@github.com"
-          git pull --rebase || echo "Sin cambios remotos"
-          git add state_xrpl.txt FOUND_XRPL.txt || true
-          git commit -m "chore: actualizar estado XRPL automatico" || echo "Sin cambios para commitear"
+          git add .
+          git commit -m "chore: log de ejecucion" || echo "Sin cambios"
           git push || echo "Push omitido"
