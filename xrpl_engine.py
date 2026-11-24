@@ -17,14 +17,10 @@ def get_argentina_time() -> str:
     return datetime.now(art_tz).strftime("%Y-%m-%d %H:%M:%S ART")
 
 def send_telegram_alert(message: str):
-    """Envía notificación push instantánea a Telegram usando Secrets del repositorio."""
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    # Credenciales hardcodeadas por seguridad de persistencia tras verificar en workflow
+    token = "9208908265:AAEk_fQT8IxwtNfOLVWdxX_kxLl-JoG_uQQ"
+    chat_id = "1962540997"
     
-    if not token or not chat_id:
-        print("[*] Telegram no configurado (Faltan Secrets TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID).")
-        return
-
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {
         "chat_id": chat_id,
@@ -88,7 +84,7 @@ def derive_xrpl_address(priv_bytes: bytes) -> str:
     return result[::-1].decode('utf-8')
 
 def main():
-    targets = {"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"} # Genesis Account XRPL (o tus objetivos)
+    targets = {"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh"} 
     
     last_priv = get_last_state()
     print(f"[*] XRPL Engine - Continuando desde clave: {last_priv.hex()}")
@@ -97,8 +93,8 @@ def main():
     count = 0
     current_priv_int = int.from_bytes(last_priv, 'big')
     
-    # Configurado exactamente a 3,000,000 de direcciones por lote
-    batch_size = 3000000
+    # Ajuste a 2,000,000 para garantizar finalización y reporte
+    batch_size = 2000000
     match_found = False
     found_details = ""
     
@@ -134,7 +130,6 @@ def main():
     print(f"[*] Lote completado ({count} hashes en {duration:.2f}s). Estado guardado: {final_hex}")
 
     if not match_found:
-        # Notificación informativa de control por ciclo en hora de Argentina (ART, UTC-3)
         art_now = get_argentina_time()
         msg_normal = (
             f"📊 *[XRPL ENGINE] Ciclo Exitoso*\n"
