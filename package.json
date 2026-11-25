@@ -1,0 +1,8 @@
+{
+  "name": "xrpl-scanner",
+  "version": "1.0.0",
+  "dependencies": {
+    "xrpl": "^3.0.0",
+    "ws": "^8.18.0"
+  }
+}
