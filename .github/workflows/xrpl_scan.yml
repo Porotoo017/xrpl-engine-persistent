@@ -1,0 +1,31 @@
+name: XRPL Autonomous Engine 24/7
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Se ejecuta automáticamente cada 15 minutos de forma ininterrumpida
+  workflow_dispatch: # Permite ejecución manual inmediata
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar motor de escaneo XRPL
+        run: node scanner.js
+
+      - name: Guardar resultados en el repositorio
+        run: |
+          git config --global user.name "XRPL Autonomous Bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add hallazgos_reales.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "feat: actualizar hallazgos de escaneo XRPL [skip ci]" && git push)

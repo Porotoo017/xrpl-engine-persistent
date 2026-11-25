@@ -1,8 +1,10 @@
 {
-  "name": "xrpl-scanner",
-  "version": "1.0.0",
+  "name": "xrpl-engine-persistent",
+  "version": "2.0.0",
+  "description": "Motor autónomo de escaneo y verificación XRPL 24/7 en GitHub Actions",
+  "type": "module",
   "dependencies": {
-    "xrpl": "^3.0.0",
+    "xrpl": "^4.2.0",
     "ws": "^8.18.0"
   }
 }
